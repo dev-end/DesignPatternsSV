@@ -35,14 +35,18 @@ public class Order : OrderSystem {
         { "laptop", () => new Laptop() }
     };
 
-    protected override Product CreateProduct(string type, int cpu, int ram, int storage, int display) {
-        if (productFactory.ContainsKey(type.ToLower())) {
-            var product = productFactory[type.ToLower()]();
-            product.MakeComputer(cpu, ram, storage, display);
-            return product;
-        }
-        throw new ArgumentException($"Product type {type} not recognized.");
+  // Factory method to create products based on type
+  // Used to create objects without specifying the exact class
+  protected override Product CreateProduct(string type, int cpu, int ram, int storage, int display)
+  {
+    if (productFactory.ContainsKey(type.ToLower()))
+    {
+      var product = productFactory[type.ToLower()]();
+      product.MakeComputer(cpu, ram, storage, display);
+      return product;
     }
+    throw new ArgumentException($"Product type {type} not recognized.");
+  }
 }
 
 class Program{
