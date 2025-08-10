@@ -1,4 +1,32 @@
-﻿using iTextSharp.text;
+﻿/*
+===============================================================================
+                           BUILDER DESIGN PATTERN
+===============================================================================
+
+PURPOSE: Constructs complex objects step by step. Allows you to produce 
+         different types and representations of an object using the same 
+         construction code.
+
+WHEN TO USE:
+• When creating complex objects with many optional parameters
+• When you want to avoid "telescoping constructor" problem
+• When object creation requires multiple steps
+• When you want to create different representations of the same object
+
+IMPLEMENTATION APPROACH: Fluent Interface Builder
+• Uses method chaining (returns 'this')
+• Builds object step by step
+• Final Build() method creates/exports the result
+
+REAL-WORLD ANALOGY: Building a house
+• You don't get the house all at once
+• You build it step by step: foundation → walls → roof → interior
+• Same process can create different house types
+
+===============================================================================
+*/
+
+using iTextSharp.text;
 using iTextSharp.text.pdf;
 using iTextSharp.text.pdf.draw;
 using System.Linq;
@@ -7,6 +35,7 @@ namespace BuilderDesignPattern
 {
     internal class Resume
     {
+        // Personal Information Fields
         private string firstName;
         private string lastName;
         private string address;
@@ -17,12 +46,15 @@ namespace BuilderDesignPattern
         private string[] skills;
         private string[] experience;
 
+        /// <summary>
+        /// Builder Method: Sets name information
+        /// Returns 'this' to enable method chaining (Fluent Interface)
+        /// </summary>
         public Resume AddName(string firstName, string lastName)
         {
             this.lastName = lastName;
             this.firstName = firstName;
-
-            return this;
+            return this; // Enable chaining: resume.AddName().AddEmail().AddPhone()
         } 
 
         public Resume AddEmail(string email)

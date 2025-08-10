@@ -1,0 +1,256 @@
+Builder Design Pattern
+====================
+
+Helps in constructing complex objects step by step.
+Avoids the "Telescoping Constructor" anti-pattern.
+
+WHAT IS TELESCOPING CONSTRUCTOR?
+===============================
+
+Telescoping Constructor is an anti-pattern where you create multiple constructors 
+with different numbers of parameters to handle optional values. It's called 
+"telescoping" because the constructors "telescope" outward, each one taking more 
+parameters than the previous.
+
+EXAMPLE OF TELESCOPING CONSTRUCTOR PROBLEM:
+=========================================
+
+// ❌ BAD: Telescoping Constructor Anti-Pattern
+public class Pizza
+{
+    private int size;
+    private bool cheese;
+    private bool pepperoni;
+    private bool bacon;
+    private bool mushrooms;
+    private bool onions;
+    private bool peppers;
+
+    // Constructor 1: Only size
+    public Pizza(int size)
+    {
+        this.size = size;
+    }
+
+    // Constructor 2: Size + cheese
+    public Pizza(int size, bool cheese) : this(size)
+    {
+        this.cheese = cheese;
+    }
+
+    // Constructor 3: Size + cheese + pepperoni
+    public Pizza(int size, bool cheese, bool pepperoni) : this(size, cheese)
+    {
+        this.pepperoni = pepperoni;
+    }
+
+    // Constructor 4: Size + cheese + pepperoni + bacon
+    public Pizza(int size, bool cheese, bool pepperoni, bool bacon) 
+        : this(size, cheese, pepperoni)
+    {
+        this.bacon = bacon;
+    }
+
+    // Constructor 5: Size + cheese + pepperoni + bacon + mushrooms
+    public Pizza(int size, bool cheese, bool pepperoni, bool bacon, bool mushrooms) 
+        : this(size, cheese, pepperoni, bacon)
+    {
+        this.mushrooms = mushrooms;
+    }
+
+    // Constructor 6: ALL parameters (telescopes out to maximum)
+    public Pizza(int size, bool cheese, bool pepperoni, bool bacon, 
+                 bool mushrooms, bool onions, bool peppers) 
+        : this(size, cheese, pepperoni, bacon, mushrooms)
+    {
+        this.onions = onions;
+        this.peppers = peppers;
+    }
+}
+
+PROBLEMS WITH TELESCOPING CONSTRUCTOR:
+====================================
+
+1. TOO MANY CONSTRUCTORS
+   - Need to create constructor for every combination
+   - Code becomes bloated and hard to maintain
+   - Exponential growth: N optional parameters = 2^N possible constructors!
+
+2. PARAMETER CONFUSION
+   - Hard to remember parameter order
+   - Easy to pass wrong values
+   - Multiple boolean parameters are especially confusing
+
+   // Which parameter is which? 😵
+   var pizza = new Pizza(12, true, false, true, false, true, false);
+   //                    ^    ^     ^      ^     ^      ^     ^
+   //                   size cheese pep   bacon mush  onion pepper
+   //                        WHO CAN REMEMBER THIS ORDER?
+
+3. POOR READABILITY
+   - Code doesn't explain what each parameter means
+   - Hard to understand without checking constructor definition
+   - Maintainers waste time figuring out parameter meanings
+
+4. INFLEXIBLE
+   - To add new optional parameter, need to create more constructors
+   - Breaking changes when parameter order needs to change
+   - Can't skip parameters in the middle
+
+5. ERROR PRONE
+   - Easy to pass parameters in wrong order
+   - Compiler can't catch logical errors
+   - Similar parameter types make mistakes likely
+
+EXAMPLE OF THE CONFUSION:
+========================
+
+// All of these are valid but confusing:
+var pizza1 = new Pizza(12);                                    // Only size
+var pizza2 = new Pizza(12, true);                             // Size + cheese
+var pizza3 = new Pizza(12, true, false);                      // + no pepperoni
+var pizza4 = new Pizza(12, true, false, true);                // + bacon
+var pizza5 = new Pizza(12, true, false, true, false);         // + no mushrooms
+var pizza6 = new Pizza(12, true, false, true, false, true);   // + onions
+var pizza7 = new Pizza(12, true, false, true, false, true, false); // + no peppers
+
+// ❌ NIGHTMARE: What does this mean?
+var confusing = new Pizza(12, false, true, false, true, false, true);
+// Is that: 12" pizza, no cheese, pepperoni, no bacon, mushrooms, no onions, peppers?
+// OR: Large pizza with some toppings I can't figure out without documentation?
+
+BUILDER PATTERN SOLUTION:
+=========================
+
+// ✅ GOOD: Builder Pattern Solution
+public class Pizza
+{
+    private int size;
+    private bool cheese;
+    private bool pepperoni;
+    private bool bacon;
+    private bool mushrooms;
+    private bool onions;
+    private bool peppers;
+
+    // Private constructor - only builder can create Pizza
+    private Pizza() { }
+
+    public class Builder
+    {
+        private Pizza pizza = new Pizza();
+
+        public Builder Size(int size)
+        {
+            pizza.size = size;
+            return this;
+        }
+
+        public Builder AddCheese()
+        {
+            pizza.cheese = true;
+            return this;
+        }
+
+        public Builder AddPepperoni()
+        {
+            pizza.pepperoni = true;
+            return this;
+        }
+
+        public Builder AddBacon()
+        {
+            pizza.bacon = true;
+            return this;
+        }
+
+        public Builder AddMushrooms()
+        {
+            pizza.mushrooms = true;
+            return this;
+        }
+
+        public Builder AddOnions()
+        {
+            pizza.onions = true;
+            return this;
+        }
+
+        public Builder AddPeppers()
+        {
+            pizza.peppers = true;
+            return this;
+        }
+
+        public Pizza Build()
+        {
+            if (pizza.size <= 0)
+                throw new InvalidOperationException("Pizza size must be specified");
+            return pizza;
+        }
+    }
+}
+
+BUILDER PATTERN USAGE:
+=====================
+
+// ✅ CLEAR AND READABLE:
+var pizza = new Pizza.Builder()
+    .Size(12)                    // 12 inch pizza
+    .AddCheese()                // with cheese
+    .AddPepperoni()             // with pepperoni  
+    .AddMushrooms()             // with mushrooms
+    .AddOnions()                // with onions
+    .Build();                   // create the pizza
+
+// ✅ BENEFITS:
+// • Self-documenting: method names explain what they do
+// • Flexible: can call methods in any order
+// • Optional: can skip any topping
+// • Extensible: easy to add new toppings
+// • Safe: Build() method can validate required fields
+
+COMPARISON:
+==========
+
+TELESCOPING CONSTRUCTOR:
+❌ new Pizza(12, true, true, false, true, true, false);
+   // What does this mean? No idea without documentation!
+
+BUILDER PATTERN:
+✅ new Pizza.Builder()
+       .Size(12)
+       .AddCheese()
+       .AddPepperoni() 
+       .AddMushrooms()
+       .AddOnions()
+       .Build();
+   // Crystal clear what this creates!
+
+REAL-WORLD EXAMPLES OF TELESCOPING CONSTRUCTOR:
+==============================================
+
+1. StringBuilder (if it used constructors instead of methods)
+2. HTTP Request builders
+3. Database connection strings
+4. Configuration objects
+5. UI component creation
+
+SUMMARY:
+========
+
+Telescoping Constructor Anti-Pattern:
+• Creates multiple constructors with increasing parameters
+• Becomes unreadable and unmaintainable
+• Confusing parameter order
+• Hard to extend
+
+Builder Pattern Solution:
+• Step-by-step object construction
+• Self-documenting method names
+• Flexible parameter order
+• Easy to extend and maintain
+• Clear separation of concerns
+
+The Builder pattern elegantly solves the telescoping constructor problem 
+by replacing confusing parameter lists with expressive method calls! 
