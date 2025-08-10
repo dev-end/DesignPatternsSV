@@ -1,0 +1,130 @@
+@startuml AbstractFactoryClassDiagram
+!define RECTANGLE class
+
+title Abstract Factory Pattern - Computer Manufacturing System
+
+package "Abstract Products" {
+    abstract class Computer {
+        # description : string
+        + AssembleComponents(cpu:int, ram:int, storage:int, display:int) : void
+        + GetInfo() : string
+    }
+    
+    abstract class Monitor {
+        # description : string
+        + SetupDisplay(size:int, resolution:string) : void
+        + GetInfo() : string
+    }
+}
+
+package "Dell Product Family" {
+    class DellDesktop {
+        + AssembleComponents(cpu:int, ram:int, storage:int, display:int) : void
+    }
+    
+    class DellLaptop {
+        + AssembleComponents(cpu:int, ram:int, storage:int, display:int) : void
+    }
+    
+    class DellMonitor {
+        + SetupDisplay(size:int, resolution:string) : void
+    }
+}
+
+package "Apple Product Family" {
+    class AppleiMac {
+        + AssembleComponents(cpu:int, ram:int, storage:int, display:int) : void
+    }
+    
+    class AppleMacBook {
+        + AssembleComponents(cpu:int, ram:int, storage:int, display:int) : void
+    }
+    
+    class AppleStudioDisplay {
+        + SetupDisplay(size:int, resolution:string) : void
+    }
+}
+
+package "Abstract Factory" {
+    abstract class ComputerFactory {
+        + CreateDesktop() : Computer {abstract}
+        + CreateLaptop() : Computer {abstract}
+        + CreateMonitor() : Monitor {abstract}
+    }
+}
+
+package "Concrete Factories" {
+    class DellFactory {
+        + CreateDesktop() : Computer
+        + CreateLaptop() : Computer
+        + CreateMonitor() : Monitor
+    }
+    
+    class AppleFactory {
+        + CreateDesktop() : Computer
+        + CreateLaptop() : Computer
+        + CreateMonitor() : Monitor
+    }
+}
+
+package "Client & Utilities" {
+    class ComputerStore {
+        - _factory : ComputerFactory
+        - _computers : List<Computer>
+        - _monitors : List<Monitor>
+        + ComputerStore(factory:ComputerFactory)
+        + OrderDesktop(cpu:int, ram:int, storage:int, display:int) : Computer
+        + OrderLaptop(cpu:int, ram:int, storage:int, display:int) : Computer
+        + OrderMonitor(size:int, resolution:string) : Monitor
+        + ListInventory() : void
+    }
+    
+    class FactoryProvider {
+        + {static} GetFactory(vendorType:string) : ComputerFactory
+    }
+}
+
+' Inheritance relationships
+Computer <|-- DellDesktop
+Computer <|-- DellLaptop
+Computer <|-- AppleiMac
+Computer <|-- AppleMacBook
+
+Monitor <|-- DellMonitor
+Monitor <|-- AppleStudioDisplay
+
+ComputerFactory <|-- DellFactory
+ComputerFactory <|-- AppleFactory
+
+' Factory creation relationships
+DellFactory ..> DellDesktop : creates
+DellFactory ..> DellLaptop : creates
+DellFactory ..> DellMonitor : creates
+
+AppleFactory ..> AppleiMac : creates
+AppleFactory ..> AppleMacBook : creates
+AppleFactory ..> AppleStudioDisplay : creates
+
+' Client relationships
+ComputerStore o-- ComputerFactory : uses
+ComputerStore o-- Computer : contains
+ComputerStore o-- Monitor : contains
+
+FactoryProvider ..> ComputerFactory : provides
+FactoryProvider ..> DellFactory : creates
+FactoryProvider ..> AppleFactory : creates
+
+' Notes
+note right of ComputerFactory : Abstract Factory\nDefines interface for\ncreating product families
+
+note right of DellFactory : Concrete Factory\nCreates Dell product family\n(Desktop, Laptop, Monitor)
+
+note right of AppleFactory : Concrete Factory\nCreates Apple product family\n(iMac, MacBook, Studio Display)
+
+note right of ComputerStore : Client\nUses abstract factory\nto create products
+
+note top of Computer : Abstract Product\nDefines interface for\ncomputer products
+
+note top of Monitor : Abstract Product\nDefines interface for\nmonitor products
+
+@enduml
